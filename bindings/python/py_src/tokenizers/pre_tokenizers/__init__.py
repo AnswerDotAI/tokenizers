@@ -4,6 +4,7 @@ from .. import pre_tokenizers
 PreTokenizer = pre_tokenizers.PreTokenizer
 BertPreTokenizer = pre_tokenizers.BertPreTokenizer
 ByteLevel = pre_tokenizers.ByteLevel
+CasingPrefix = pre_tokenizers.CasingPrefix
 CharDelimiterSplit = pre_tokenizers.CharDelimiterSplit
 Digits = pre_tokenizers.Digits
 Metaspace = pre_tokenizers.Metaspace

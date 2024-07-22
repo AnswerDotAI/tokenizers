@@ -9,6 +9,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use tk::normalizer::SplitDelimiterBehavior;
 use tk::pre_tokenizers::bert::BertPreTokenizer;
 use tk::pre_tokenizers::byte_level::ByteLevel;
+use tk::pre_tokenizers::casing_prefix::CasingPrefix;
 use tk::pre_tokenizers::delimiter::CharDelimiterSplit;
 use tk::pre_tokenizers::digits::Digits;
 use tk::pre_tokenizers::metaspace::{Metaspace, PrependScheme};
@@ -88,6 +89,9 @@ impl PyPreTokenizer {
                         }
                         PreTokenizerWrapper::UnicodeScripts(_) => {
                             Py::new(py, (PyUnicodeScripts {}, base))?.into_py(py)
+                        }
+                        PreTokenizerWrapper::CasingPrefix(_) => {
+                            Py::new(py, (PyCasingPrefix {}, base))?.into_py(py)
                         }
                     },
                 }
@@ -289,6 +293,16 @@ impl PyByteLevel {
             .into_iter()
             .map(|c| c.to_string())
             .collect()
+    }
+}
+#[pyclass(extends=PyPreTokenizer, module = "tokenizers.pre_tokenizers", name = "CasingPrefix")]
+pub struct PyCasingPrefix {}
+#[pymethods]
+impl PyCasingPrefix {
+    #[new]
+    #[pyo3(text_signature = "(self)")]
+    fn new() -> (Self, PyPreTokenizer) {
+        (PyCasingPrefix {}, CasingPrefix::new().into())
     }
 }
 
@@ -738,6 +752,7 @@ pub fn pre_tokenizers(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PySequence>()?;
     m.add_class::<PyDigits>()?;
     m.add_class::<PyUnicodeScripts>()?;
+    m.add_class::<PyCasingPrefix>()?;
     Ok(())
 }
 
