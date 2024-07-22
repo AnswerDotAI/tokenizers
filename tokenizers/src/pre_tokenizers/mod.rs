@@ -1,5 +1,6 @@
 pub mod bert;
 pub mod byte_level;
+pub mod casing_prefix;
 pub mod delimiter;
 pub mod digits;
 pub mod metaspace;
@@ -13,6 +14,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::pre_tokenizers::bert::BertPreTokenizer;
 use crate::pre_tokenizers::byte_level::ByteLevel;
+use crate::pre_tokenizers::casing_prefix::CasingPrefix;
 use crate::pre_tokenizers::delimiter::CharDelimiterSplit;
 use crate::pre_tokenizers::digits::Digits;
 use crate::pre_tokenizers::metaspace::Metaspace;
@@ -28,6 +30,7 @@ use crate::{PreTokenizedString, PreTokenizer};
 pub enum PreTokenizerWrapper {
     BertPreTokenizer(BertPreTokenizer),
     ByteLevel(ByteLevel),
+    CasingPrefix(CasingPrefix),
     Delimiter(CharDelimiterSplit),
     Metaspace(Metaspace),
     Whitespace(Whitespace),
@@ -44,6 +47,7 @@ impl PreTokenizer for PreTokenizerWrapper {
         match self {
             Self::BertPreTokenizer(bpt) => bpt.pre_tokenize(normalized),
             Self::ByteLevel(bpt) => bpt.pre_tokenize(normalized),
+            Self::CasingPrefix(cp) => cp.pre_tokenize(normalized),
             Self::Delimiter(dpt) => dpt.pre_tokenize(normalized),
             Self::Metaspace(mspt) => mspt.pre_tokenize(normalized),
             Self::Whitespace(wspt) => wspt.pre_tokenize(normalized),
@@ -59,6 +63,7 @@ impl PreTokenizer for PreTokenizerWrapper {
 
 impl_enum_from!(BertPreTokenizer, PreTokenizerWrapper, BertPreTokenizer);
 impl_enum_from!(ByteLevel, PreTokenizerWrapper, ByteLevel);
+impl_enum_from!(CasingPrefix, PreTokenizerWrapper, CasingPrefix);
 impl_enum_from!(CharDelimiterSplit, PreTokenizerWrapper, Delimiter);
 impl_enum_from!(Whitespace, PreTokenizerWrapper, Whitespace);
 impl_enum_from!(Punctuation, PreTokenizerWrapper, Punctuation);
