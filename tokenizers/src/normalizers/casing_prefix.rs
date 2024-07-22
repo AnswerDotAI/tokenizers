@@ -2,9 +2,9 @@ use crate::tokenizer::{NormalizedString, Normalizer, Result};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
-const TOKEN_CAPITALISED: &str = "[CAP]";
-const TOKEN_ALL_CAPS: &str = "[ALLCAPS]";
-const TOKEN_MIXED_CASE: &str = "[MIXED]";
+const TOKEN_CAPITALISED: &str = "[CAP] ";
+const TOKEN_ALL_CAPS: &str = "[ALLCAPS] ";
+const TOKEN_MIXED_CASE: &str = "[MIXED] ";
 
 #[derive(Debug, Clone, Serialize)]
 pub struct CasingPrefix {
@@ -64,7 +64,7 @@ impl CasingPrefix {
         } else if word.chars().all(|c| c.is_lowercase()) {
             // Return lowercase words as is
             word.to_string()
-        } else if word.chars().next().map_or(false, |c| c.is_uppercase()) && word[1..].chars().all(|c| c.is_lowercase()) {
+        } else if word.chars().next().map_or(false, |c| c.is_uppercase()) && word.chars().skip(1).all(|c| c.is_lowercase()) {
             format!("{}{}", TOKEN_CAPITALISED, word.to_lowercase())
         } else if word.chars().all(|c| c.is_uppercase()) {
             format!("{}{}", TOKEN_ALL_CAPS, word.to_lowercase())
@@ -95,7 +95,7 @@ mod tests {
     #[test]
     fn test_casing_prefix_normalizer() {
         let original = "Hello WORLD MixedCase 123 lowercase";
-        let expected = "[CAP]hello [ALLCAPS]world [MIXED]mixedcase 123 lowercase";
+        let expected = "[CAP] hello [ALLCAPS] world [MIXED] mixedcase 123 lowercase";
 
         let mut n = NormalizedString::from(original);
         CasingPrefix::new().normalize(&mut n).unwrap();
@@ -106,7 +106,18 @@ mod tests {
     #[test]
     fn test_casing_prefix_edge_cases() {
         let original = "ALL123CAPS 123 mIxEd123CaSe";
-        let expected = "[MIXED]all123caps 123 [MIXED]mixed123case";
+        let expected = "[MIXED] all123caps 123 [MIXED] mixed123case";
+
+        let mut n = NormalizedString::from(original);
+        CasingPrefix::new().normalize(&mut n).unwrap();
+
+        assert_eq!(n.get(), expected);
+    }
+
+    #[test]
+    fn test_casing_prefix_non_ascii() {
+        let original = "Æsthetic CAFÉ Ångström";
+        let expected = "[CAP] æsthetic [ALLCAPS] café [CAP] ångström";
 
         let mut n = NormalizedString::from(original);
         CasingPrefix::new().normalize(&mut n).unwrap();
