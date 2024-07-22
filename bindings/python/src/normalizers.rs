@@ -9,7 +9,7 @@ use crate::utils::{PyNormalizedString, PyNormalizedStringRefMut, PyPattern};
 use serde::ser::SerializeStruct;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use tk::normalizers::{
-    BertNormalizer, ByteLevel, Lowercase, Nmt, NormalizerWrapper, Precompiled, Prepend, Replace,
+    BertNormalizer, ByteLevel, CasingPrefix, Lowercase, Nmt, NormalizerWrapper, Precompiled, Prepend, Replace,
     Strip, StripAccents, NFC, NFD, NFKC, NFKD,
 };
 use tk::{NormalizedString, Normalizer};
@@ -60,14 +60,12 @@ impl PyNormalizer {
             PyNormalizerTypeWrapper::Single(ref inner) => match &*inner.as_ref().read().unwrap() {
                 PyNormalizerWrapper::Custom(_) => Py::new(py, base)?.into_py(py),
                 PyNormalizerWrapper::Wrapped(ref inner) => match inner {
-                    NormalizerWrapper::Sequence(_) => {
-                        Py::new(py, (PySequence {}, base))?.into_py(py)
-                    }
+                    NormalizerWrapper::Sequence(_) => Py::new(py, (PySequence {}, base))?.into_py(py),
                     NormalizerWrapper::BertNormalizer(_) => {
                         Py::new(py, (PyBertNormalizer {}, base))?.into_py(py)
                     }
                     NormalizerWrapper::StripNormalizer(_) => {
-                        Py::new(py, (PyBertNormalizer {}, base))?.into_py(py)
+                        Py::new(py, (PyStrip {}, base))?.into_py(py)
                     }
                     NormalizerWrapper::Prepend(_) => Py::new(py, (PyPrepend {}, base))?.into_py(py),
                     NormalizerWrapper::ByteLevel(_) => {
@@ -88,6 +86,9 @@ impl PyNormalizer {
                     }
                     NormalizerWrapper::Replace(_) => Py::new(py, (PyReplace {}, base))?.into_py(py),
                     NormalizerWrapper::Nmt(_) => Py::new(py, (PyNmt {}, base))?.into_py(py),
+                    NormalizerWrapper::CasingPrefix(_) => {
+                        Py::new(py, (PyCasingPrefix {}, base))?.into_py(py)
+                    }
                 },
             },
         })
@@ -498,6 +499,20 @@ impl PyPrecompiled {
     }
 }
 
+
+// CasingPrefix normalizer
+
+#[pyclass(extends=PyNormalizer, module = "tokenizers.normalizers", name = "CasingPrefix")]
+pub struct PyCasingPrefix {}
+#[pymethods]
+impl PyCasingPrefix {
+    #[new]
+    #[pyo3(text_signature = "(self)")]
+    fn new() -> (Self, PyNormalizer) {
+        (PyCasingPrefix {}, CasingPrefix::new().into())
+    }
+}
+
 /// Replace normalizer
 #[pyclass(extends=PyNormalizer, module = "tokenizers.normalizers", name = "Replace")]
 pub struct PyReplace {}
@@ -666,6 +681,7 @@ pub fn normalizers(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyNmt>()?;
     m.add_class::<PyPrecompiled>()?;
     m.add_class::<PyReplace>()?;
+    m.add_class::<PyCasingPrefix>()?;
     Ok(())
 }
 

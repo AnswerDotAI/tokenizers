@@ -1,5 +1,6 @@
 pub mod bert;
 pub mod byte_level;
+pub mod casing_prefix;
 pub mod precompiled;
 pub mod prepend;
 pub mod replace;
@@ -8,6 +9,7 @@ pub mod unicode;
 pub mod utils;
 pub use crate::normalizers::bert::BertNormalizer;
 pub use crate::normalizers::byte_level::ByteLevel;
+pub use crate::normalizers::casing_prefix::CasingPrefix;
 pub use crate::normalizers::precompiled::Precompiled;
 pub use crate::normalizers::prepend::Prepend;
 pub use crate::normalizers::replace::Replace;
@@ -23,6 +25,7 @@ use crate::{NormalizedString, Normalizer};
 #[serde(untagged)]
 pub enum NormalizerWrapper {
     BertNormalizer(BertNormalizer),
+    CasingPrefix(CasingPrefix),
     StripNormalizer(Strip),
     StripAccents(StripAccents),
     NFC(NFC),
@@ -48,6 +51,7 @@ impl Normalizer for NormalizerWrapper {
             Self::NFD(nfd) => nfd.normalize(normalized),
             Self::NFKC(nfkc) => nfkc.normalize(normalized),
             Self::NFKD(nfkd) => nfkd.normalize(normalized),
+            Self::CasingPrefix(cp) => cp.normalize(normalized),
             Self::Sequence(sequence) => sequence.normalize(normalized),
             Self::Lowercase(lc) => lc.normalize(normalized),
             Self::Nmt(lc) => lc.normalize(normalized),
@@ -69,6 +73,7 @@ impl_enum_from!(StripAccents, NormalizerWrapper, StripAccents);
 impl_enum_from!(Sequence, NormalizerWrapper, Sequence);
 impl_enum_from!(Lowercase, NormalizerWrapper, Lowercase);
 impl_enum_from!(Nmt, NormalizerWrapper, Nmt);
+impl_enum_from!(CasingPrefix, NormalizerWrapper, CasingPrefix);
 impl_enum_from!(Precompiled, NormalizerWrapper, Precompiled);
 impl_enum_from!(Replace, NormalizerWrapper, Replace);
 impl_enum_from!(Prepend, NormalizerWrapper, Prepend);
